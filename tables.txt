@@ -1,0 +1,89 @@
+CREATE TABLE TESTKEYS (
+    testkey CHAR(20) PRIMARY KEY
+);
+
+CREATE TABLE USERS (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    loginid VARCHAR(16),
+    loginpw VARCHAR(16),
+    testkey CHAR(20),
+    nickname VARCHAR(16),
+    UNIQUE (testkey),
+    UNIQUE (loginid),
+    UNIQUE (nickname),
+    FOREIGN KEY (testkey) REFERENCES TESTKEYS(testkey) ON DELETE CASCADE
+);
+
+CREATE TABLE CARDPACKS (
+    id INT PRIMARY KEY,
+    original INT DEFAULT 0,
+    naxxramas INT DEFAULT 0,
+    gobvsgno INT DEFAULT 0,
+    blackrock INT DEFAULT 0,
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE DECKS (
+    id INT,
+    deckname VARCHAR(20),
+    deckcode VARCHAR(128),
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE RESOURCES (
+    id INT PRIMARY KEY,
+    gold INT DEFAULT 0,
+    dust INT DEFAULT 0,
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE LEVELS (
+    id INT PRIMARY KEY,
+    druid INT DEFAULT 1,
+    hunter INT DEFAULT 1,
+    mage INT DEFAULT 1,
+    paladin INT DEFAULT 1,
+    priest INT DEFAULT 1,
+    rogue INT DEFAULT 1,
+    shaman INT DEFAULT 1,
+    warlock INT DEFAULT 1,
+    warrior INT DEFAULT 1,
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE WINS (
+    id INT PRIMARY KEY,
+    druid INT DEFAULT 0,
+    hunter INT DEFAULT 0,
+    mage INT DEFAULT 0,
+    paladin INT DEFAULT 0,
+    priest INT DEFAULT 0,
+    rogue INT DEFAULT 0,
+    shaman INT DEFAULT 0,
+    warlock INT DEFAULT 0,
+    warrior INT DEFAULT 0,
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE CARDS (
+    id INT PRIMARY KEY,
+    name VARCHAR(32),
+    pack ENUM('original', 'naxxramas', 'gobvsgno', 'blackrock'),
+    type ENUM('minion', 'spell', 'weapon'),
+    rarity ENUM('free', 'common', 'rare', 'epic', 'legendary'),
+    faction ENUM('neutral', 'druid', 'hunter', 'mage', 'paladin', 'priest', 'rogue', 'shaman', 'warlock', 'warrior'),
+    mana INT,
+    attack INT,
+    health INT,
+    race ENUM('beast', 'demon', 'dragon', 'mech', 'murloc', 'pirate', 'totem', 'default'),
+    explanation VARCHAR(128)
+);
+
+CREATE TABLE COLLECTIONS (
+    id INT,
+    cardid INT,
+    qty INT DEFAULT 0,
+    PRIMARY KEY (id, cardid),
+    FOREIGN KEY (cardid) REFERENCES CARDS(id) ON DELETE CASCADE,
+    FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);

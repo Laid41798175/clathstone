@@ -8,8 +8,8 @@ class LobbyEnum(Enum):
     register = 0
     login = 1
     logout = 2
-    purchase = 3
-    craft = 4
+    changed = 3
+    cheat = 4
     
 class GameEnum(Enum):
     play = 0

@@ -1,5 +1,6 @@
 import pickle
 from common.enums import ServerEnum, LobbyEnum, GameEnum, CardPack, Faction
+from common.userdata import UserData
 
 class Serial:
     
@@ -18,10 +19,11 @@ class ServerResponse(Serial):
 
 class ServerAccept(ServerResponse):
     
-    def __init__(self, title: str, text: str):
+    def __init__(self, title: str, text: str, user_data: UserData = None):
         super().__init__(ServerEnum.accept)
         self.title = title
         self.text = text
+        self.user_data = user_data
 
 class ServerDecline(ServerResponse):
     
@@ -56,20 +58,18 @@ class Logout(Lobby):
     def __init__(self):
         super().__init__(LobbyEnum.logout)
         
-class Purchase(Lobby):
+class Changed(Lobby):
     
-    def __init__(self, id: int, cardpack: CardPack, qty: int):
-        super().__init__(LobbyEnum.purchase)
-        self.id = id
-        self.cardpack = cardpack
-        self.qty = qty        
+    def __init__(self, user_data = None):
+        super().__init__(LobbyEnum.changed)
+        self.user_data = user_data
         
-class Craft(Lobby):
+class Cheat(Lobby):
     
-    def __init__(self, id: int, card_id: int):
-        super().__init__(LobbyEnum.craft)
-        self.id = id
-        self.card_id = card_id
+    def __init__(self, text: str):
+        super().__init__(LobbyEnum.cheat)
+        self.text = text
+        
     
 class Game(Serial):
     

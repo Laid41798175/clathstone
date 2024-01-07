@@ -12,8 +12,8 @@ class UserData:
         self.dust : int = dust
         self.packs : dict[CardPack, int] = packs
         self.cards : dict[int, int] = cards # his/her own collections
-        self.decks : list[str] = decks # deck lists
-        self.levels : dict[Faction, int] = levels
+        self.decks : list[tuple[str, str]] = decks # deck lists
+        self.levels : dict[Faction, float] = levels
         self.wins : dict[Faction, int] = wins
     
     @staticmethod

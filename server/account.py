@@ -2,15 +2,26 @@ import socket
 
 from server.database import cursor
 from server.socket_manager import clients_sock_to_id, clients_id_to_sock
+from server.socket_manager import client_disconnected
 from server.client_info import load_user_info
+from server.secret import CHEAT_GOLD, CHEAT_DUST, CHEAT_LEVEL, \
+    CHEAT_DRUID, CHEAT_HUNTER, CHEAT_MAGE, CHEAT_PALADIN, CHEAT_PRIEST, \
+    CHEAT_ROGUE, CHEAT_SHAMAN, CHEAT_WARLOCK, CHEAT_WARRIOR
 
 from common.serializes import *
 from common.userdata import UserData
 
 def handle_client(client: socket.socket, addr):
     while True:
-        data_received : bytes = client.recv(1024)
-        process(client, data_received)
+        try: 
+            data_received : bytes = client.recv(1024)
+            process(client, data_received)
+        except ConnectionResetError:
+            print(f"{addr} disconnected")
+            client_disconnected(client)
+            break
+    
+    client.close()
 
 def process(client: socket.socket, bts: bytes):
     request : Lobby = Lobby.decode(bts)
@@ -18,25 +29,32 @@ def process(client: socket.socket, bts: bytes):
         ret, title, text = register(request)
     elif request.content == LobbyEnum.login:
         ret, title, text = login(request, client)
+        if ret:
+            id : int = clients_sock_to_id[client] # clients_sock_to_id[client] is filled
+            user_data : UserData = load_user_info(id)
+            response = ServerAccept(title, text, user_data)
+            client.sendall(ServerResponse.encode(response))
+            return
     elif request.content == LobbyEnum.logout:
         ret, title, text = logout(request)
-    elif request.content == LobbyEnum.purchase:
-        ret, title, text = purchase(request, client)
-    elif request.content == LobbyEnum.craft:
-        ret, title, text = craft(request, client)
+    elif request.content == LobbyEnum.changed:
+        ret, title, text = changed(request, client)
+    elif request.content == LobbyEnum.cheat:
+        ret, title, text = cheat(request, client)
+        if ret:
+            id : int = clients_sock_to_id[client]
+            user_data : UserData = load_user_info(id)
+            response = ServerAccept(title, text, user_data)
+            client.sendall(ServerResponse.encode(response))
+            return
     else:
         ret, title, text = (False, "Process failed", "Unexpected error.")
     
     if ret:
-        response = ServerAccept(ServerEnum.accept, title, text)
+        response = ServerAccept(title, text)
     else:
-        response = ServerDecline(ServerEnum.decline, title, text)
+        response = ServerDecline(title, text)
     client.sendall(ServerResponse.encode(response))
-    
-    if request.content == LobbyEnum.login and ret:
-        id : int = clients_sock_to_id[client]
-        user_data : UserData = load_user_info(id)
-        client.sendall(UserData.encode(user_data))
     
 def register(inst: Register) -> (bool, str, str):
     
@@ -127,32 +145,50 @@ def login(inst: Login, client: socket.socket) -> (bool, str, str):
 def logout(inst: Logout) -> (bool, str, str):
     return (False, "Logout not implemented", "Please terminate instead.")
 
-def purchase(inst: Purchase, client: socket.socket) -> (bool, str, str):
-    CARDPACK_PRICE = 100
+def changed(inst: Changed, client: socket.socket) -> (bool, str, str):
+    pass
+
+def cheat(inst: Cheat, client: socket.socket) -> (bool, str, str):
+
+    id = clients_sock_to_id[client]
     
-    query = "SELECT gold FROM RESOURCES WHERE id = %s"
-    cursor.execute(query, (inst.id,))
+    def execute_query(query: str):
+        cursor.execute(query + " WHERE id = %s", (id,))
     
-    result = cursor.fetchone()
-    if result:
-        gold = result[0]
-        if gold >= inst.qty * CARDPACK_PRICE:
-            cardpack = inst.cardpack.name.lower()
-            query = "UPDATE CARDPACKS SET %s = %s + %s WHERE id = %s"
-            cursor.execute(query, (cardpack, cardpack, inst.qty, inst.id,))
-            
-            return (True, "Purchase success!", f"You purchased {inst.qty} {cardpack} pack(s).")
-        else:
-            return (False, "Purchase failed", "Insufficient gold.")
+    text = inst.text.lower()
+    
+    if text == CHEAT_GOLD: # Starcraft
+        execute_query("UPDATE RESOURCES SET gold = gold + 10000")
+    elif text == CHEAT_DUST: # T & Sugah x NCT
+        execute_query("UPDATE RESOURCES SET dust = dust + 10000")
+    elif text == CHEAT_LEVEL: # Web Novel
+        execute_query("UPDATE LEVELS SET druid = 60.0, hunter = 60.0, mage = 60.0, paladin = 60.0, \
+            priest = 60.0, rogue = 60.0, shaman = 60.0, warlock = 60.0, warrior = 60.0")
+    elif text == CHEAT_DRUID: # DOTA 2
+        execute_query("UPDATE WINS SET druid = druid + 100")
+    elif text == CHEAT_HUNTER: # Anime
+        execute_query("UPDATE WINS SET hunter = hunter + 100")
+    elif text == CHEAT_MAGE: # Wizards of the Coast
+        execute_query("UPDATE WINS SET mage = mage + 100")
+    elif text == CHEAT_PALADIN: # Baldur's Gate 3
+        execute_query("UPDATE WINS SET paladin = paladin + 100")
+    elif text == CHEAT_PRIEST: # LostArk
+        execute_query("UPDATE WINS SET priest = priest + 100")
+    elif text == CHEAT_ROGUE: # Mission: Impossible
+        execute_query("UPDATE WINS SET rogue = rogue + 100")
+    elif text == CHEAT_SHAMAN: # Anime
+        execute_query("UPDATE WINS SET shaman = shaman + 100")
+    elif text == CHEAT_WARLOCK: # Princess Connect! Re:Dive
+        execute_query("UPDATE WINS SET warlock = warlock + 100")
+    elif text == CHEAT_WARRIOR: # Imagine Dragons
+        execute_query("UPDATE WINS SET warrior = warrior + 100")
     else:
-        return (False, "Purchase failed", "Unexpected error.")
-
-def craft(inst: Craft, client: socket.socket):
-    raise NotImplementedError
-
+        return (False, "Cheat failed", "Invalid cheat.")
+    
+    return (True, "Cheat success!", "Cheat enabled.")
+    
 def give_basic_cards(id: int):
     
-    # TODO
-    # 파일을 읽어서 계정을 등록했을 때 기본 카드들을 줍시다.
-    
-    raise NotImplementedError
+    query = "INSERT INTO COLLECTIONS (id, cardid, qty) \
+        SELECT %s, cardid, qty FROM BASICCARDS"
+    cursor.execute(query, (id,))

@@ -3,6 +3,7 @@ import os
 from client.socket_manager import client_socket
 from client.popup import show_popup
 from client.config import PATH_TO_FONT, FONT_SIZE, BUTTON_BACKGROUND_COLOR
+from client.config import SERVER_IP
 
 from kivy.uix.button import Button
 from kivy.uix.floatlayout import FloatLayout
@@ -29,14 +30,15 @@ class LoadingScreen(Screen):
     def connect_server(self, inst):
         connect, title, text = self.client_connect()
         show_popup(title, text)
-        # if not connect:
-        #     client_socket.close()
-        #     os._exit(1)
+        if not connect:
+            client_socket.close()
+            os._exit(1)
         
         self.manager.current = 'login'
         
     def client_connect(self) -> (bool, str, str):    
         try:
+            # client_socket.connect((SERVER_IP, 12345))
             client_socket.connect(('localhost', 12345))
             return (True, "Connection Success", "Connected to the server!")
         except ConnectionRefusedError:

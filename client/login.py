@@ -1,6 +1,7 @@
 from client.socket_manager import client_socket
 from client.config import PATH_TO_FONT, FONT_SIZE, BUTTON_BACKGROUND_COLOR
 from client.popup import show_popup
+from client.client_info import load_user_data
 
 from common import ServerEnum, ServerResponse, ServerAccept, ServerDecline
 from common import LobbyEnum, Lobby, Login
@@ -17,44 +18,61 @@ class LoginScreen(Screen):
         super().__init__(**kw)
         main_layout = BoxLayout(orientation='vertical', spacing=50, padding=(100, 300))
         
-        # ID 입력 필드
         self.id_input = TextInput(hint_text='ID',
                                   font_name=PATH_TO_FONT, font_size=FONT_SIZE,
                                   multiline=False)
         main_layout.add_widget(self.id_input)
 
-        # 비밀번호 입력 필드
         self.pw_input = TextInput(hint_text='Password',
                                   font_name=PATH_TO_FONT, font_size=FONT_SIZE,
                                   password=True, multiline=False)
         main_layout.add_widget(self.pw_input)
 
-        # 버튼들을 위한 수평 BoxLayout입니다.
         button_layout = BoxLayout(spacing=50)
 
-        # 'Log in' 버튼
         login_btn = Button(text='Log in',
                            font_name=PATH_TO_FONT, font_size=FONT_SIZE, 
                            background_color=BUTTON_BACKGROUND_COLOR)
-        login_btn.bind(on_press=self.login)
+        login_btn.bind(on_press=self.check_validity)
         button_layout.add_widget(login_btn)
 
-        # 'Register' 버튼
         register_btn = Button(text='Register',
                               font_name=PATH_TO_FONT, font_size=FONT_SIZE, 
                               background_color=BUTTON_BACKGROUND_COLOR)
         register_btn.bind(on_press=self.register)
         button_layout.add_widget(register_btn)
 
-        # 버튼 레이아웃을 메인 레이아웃에 추가합니다.
         main_layout.add_widget(button_layout)
 
-        # 메인 레이아웃을 화면에 추가합니다.
         self.add_widget(main_layout)
-    
-    def login(self, inst):
+ 
+    def check_validity(self, inst):
+        
+        def check_text_validity(text: str) -> bool:
+            if not text.isalnum():
+                return False
+            if 4 <= len(text) <= 16:
+                return True
+            return False
+        
+        def clear_text(input: TextInput):
+            input.text = ''
+
         loginid = self.id_input.text
         loginpw = self.pw_input.text
+        
+        if not check_text_validity(loginid):
+            clear_text(self.id_input)
+            show_popup("Invalid ID", "Your ID must be 4~16 alphanumeric characters.")
+            return
+        if not check_text_validity(loginpw):
+            clear_text(self.pw_input)
+            show_popup("Invalid Password", "Your Password must be 4~16 alphanumeric characters.")
+            return
+        
+        self.login(self, loginid, loginpw)
+        
+    def login(self, loginid: str, loginpw: str):
         request = Lobby.encode(Login(loginid, loginpw))
         client_socket.sendall(request)
 
@@ -62,11 +80,10 @@ class LoginScreen(Screen):
         response : ServerAccept | ServerDecline = ServerResponse.decode(data_received)
         if response.content == ServerEnum.accept:
             show_popup(response.title, response.text)
+            load_user_data(response)
             self.manager.current = 'lobby'
         elif response.content == ServerEnum.decline:
             show_popup(response.title, response.text)
-        else: # unexpected error
-            pass
-            
+    
     def register(self, inst):
         self.manager.current = 'register'

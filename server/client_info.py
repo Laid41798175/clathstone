@@ -35,3 +35,52 @@ def load_user_info(id: int) -> UserData:
     builder.set_packs(packs)
     
     query = "SELECT cardid, qty FROM COLLECTIONS WHERE id = %s"
+    cursor.execute(query, (id,))
+    
+    results = cursor.fetchall()
+    cards : dict[int, int] = {}
+    for result in results:
+        cardid, qty = result
+        cards[cardid] = qty
+    builder.set_cards(cards)
+    
+    query = "SELECT deckname, deckcode FROM DECKS WHERE id = %s"
+    cursor.execute(query, (id,))
+    
+    results = cursor.fetchall()
+    decks : list[tuple[str, str]] = results
+    builder.set_decks(decks)
+    
+    query = "SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM LEVELS WHERE id = %s"
+    cursor.execute(query, (id,))
+    
+    result = cursor.fetchone()
+    druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior = result
+    levels : dict[Faction, int] = {}
+    levels[Faction.druid] = druid
+    levels[Faction.hunter] = hunter
+    levels[Faction.mage] = mage
+    levels[Faction.paladin] = paladin
+    levels[Faction.priest] = priest
+    levels[Faction.rogue] = rogue
+    levels[Faction.shaman] = shaman
+    levels[Faction.warlock] = warlock
+    levels[Faction.warrior] = warrior
+    builder.set_levels(levels)
+    
+    query = "SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM WINS WHERE id = %s"
+    cursor.execute(query, (id,))
+    
+    result = cursor.fetchone()
+    druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior = result
+    wins : dict[Faction, int] = {}
+    wins[Faction.druid] = druid
+    wins[Faction.hunter] = hunter
+    wins[Faction.mage] = mage
+    wins[Faction.paladin] = paladin
+    wins[Faction.priest] = priest
+    wins[Faction.rogue] = rogue
+    wins[Faction.shaman] = shaman
+    wins[Faction.warlock] = warlock
+    wins[Faction.warrior] = warrior
+    builder.set_wins(wins)

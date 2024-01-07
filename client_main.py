@@ -1,5 +1,5 @@
 from client import client_socket
-from client import LoadingScreen, LoginScreen, RegisterScreen, LobbyScreen
+from client import LoadingScreen, LoginScreen, RegisterScreen, LobbyScreen, CollectionScreen, StoreScreen, CheatScreen
 import threading
 import os
 
@@ -14,7 +14,10 @@ class Clathstone(App):
         sm.add_widget(LoginScreen(name='login'))
         sm.add_widget(RegisterScreen(name='register'))
         sm.add_widget(LobbyScreen(name='lobby'))
-        # sm.add_widget(CollectionScreen(name='collection'))
+        sm.add_widget(CollectionScreen(name='collection'))
+        sm.add_widget(StoreScreen(name='store'))
+        sm.add_widget(CheatScreen(name='cheat'))
+        # sm.add_widget(StatScreen(name='stat'))
         # sm.add_widget(PlayScreen(name='play'))
         # sm.add_widget(GameScreen(name='game'))
         

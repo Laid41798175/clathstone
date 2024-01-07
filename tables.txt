@@ -39,15 +39,15 @@ CREATE TABLE RESOURCES (
 
 CREATE TABLE LEVELS (
     id INT PRIMARY KEY,
-    druid INT DEFAULT 1,
-    hunter INT DEFAULT 1,
-    mage INT DEFAULT 1,
-    paladin INT DEFAULT 1,
-    priest INT DEFAULT 1,
-    rogue INT DEFAULT 1,
-    shaman INT DEFAULT 1,
-    warlock INT DEFAULT 1,
-    warrior INT DEFAULT 1,
+    druid FLOAT DEFAULT 1.0 CHECK (druid <= 60.0),
+    hunter FLOAT DEFAULT 1.0 CHECK (hunter <= 60.0),
+    mage FLOAT DEFAULT 1.0 CHECK (mage <= 60.0),
+    paladin FLOAT DEFAULT 1.0 CHECK (paladin <= 60.0),
+    priest FLOAT DEFAULT 1.0 CHECK (priest <= 60.0),
+    rogue FLOAT DEFAULT 1.0 CHECK (rogue <= 60.0),
+    shaman FLOAT DEFAULT 1.0 CHECK (shaman <= 60.0),
+    warlock FLOAT DEFAULT 1.0 CHECK (warlock <= 60.0),
+    warrior FLOAT DEFAULT 1.0 CHECK (warrior <= 60.0),
     FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
 );
 
@@ -86,4 +86,11 @@ CREATE TABLE COLLECTIONS (
     PRIMARY KEY (id, cardid),
     FOREIGN KEY (cardid) REFERENCES CARDS(id) ON DELETE CASCADE,
     FOREIGN KEY (id) REFERENCES USERS(id) ON DELETE CASCADE
+);
+
+CREATE TABLE BASICCARDS (
+    cardid INT,
+    qty INT DEFAULT 0,
+    PRIMARY KEY (cardid, qty),
+    FOREIGN KEY (cardid) REFERENCES CARDS(id) ON DELETE CASCADE
 );

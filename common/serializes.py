@@ -14,21 +14,21 @@ class Serial:
 
 class ServerResponse(Serial):
     
-    def __init__(self, content: ServerEnum):
+    def __init__(self, content: ServerEnum, user_data: UserData = None):
         self.content = content
+        self.user_data = user_data
 
 class ServerAccept(ServerResponse):
     
     def __init__(self, title: str, text: str, user_data: UserData = None):
-        super().__init__(ServerEnum.accept)
+        super().__init__(ServerEnum.accept, user_data)
         self.title = title
         self.text = text
-        self.user_data = user_data
 
 class ServerDecline(ServerResponse):
     
-    def __init__(self, title: str, text: str):
-        super().__init__(ServerEnum.decline)
+    def __init__(self, title: str, text: str, user_data: UserData = None):
+        super().__init__(ServerEnum.decline, user_data)
         self.title = title
         self.text = text
 

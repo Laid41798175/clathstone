@@ -146,6 +146,7 @@ def logout(inst: Logout) -> (bool, str, str):
     return (False, "Logout not implemented", "Please terminate instead.")
 
 def changed(inst: Changed, client: socket.socket) -> (bool, str, str):
+    # TODO
     pass
 
 def cheat(inst: Cheat, client: socket.socket) -> (bool, str, str):

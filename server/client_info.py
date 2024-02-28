@@ -4,27 +4,25 @@ from common.enums import CardPack, Faction
 from server.database import cursor
 
 def load_user_info(id: int) -> UserData:
+    
+    def execute_query(query: str):
+        cursor.execute(query + " WHERE id = %s", (id,))
+    
     builder = UserDataBuilder()
     builder.set_id(id)
-    
-    query = "SELECT nickname FROM USERS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+
+    execute_query("SELECT nickname FROM USERS")
     result = cursor.fetchone()
     nickname = result[0]
     builder.set_nickname(nickname)
     
-    query = "SELECT gold, dust FROM RESOURCES WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT gold, dust FROM RESOURCES")
     result = cursor.fetchone()
     gold, dust = result
     builder.set_gold(gold)
     builder.set_dust(dust)
     
-    query = "SELECT original, naxxramas, gobvsgno, blackrock FROM CARDPACKS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT original, naxxramas, gobvsgno, blackrock FROM CARDPACKS")
     result = cursor.fetchone()
     original, naxxramas, gobvsgno, blackrock = result
     packs : dict[CardPack, int] = {}
@@ -34,9 +32,7 @@ def load_user_info(id: int) -> UserData:
     packs[CardPack.blackrock] = blackrock 
     builder.set_packs(packs)
     
-    query = "SELECT cardid, qty FROM COLLECTIONS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT cardid, qty FROM COLLECTIONS")
     results = cursor.fetchall()
     cards : dict[int, int] = {}
     for result in results:
@@ -44,19 +40,15 @@ def load_user_info(id: int) -> UserData:
         cards[cardid] = qty
     builder.set_cards(cards)
     
-    query = "SELECT deckname, deckcode FROM DECKS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT deckname, deckcode FROM DECKS")    
     results = cursor.fetchall()
     decks : list[tuple[str, str]] = results
     builder.set_decks(decks)
     
-    query = "SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM LEVELS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM LEVELS")    
     result = cursor.fetchone()
     druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior = result
-    levels : dict[Faction, int] = {}
+    levels : dict[Faction, float] = {}
     levels[Faction.druid] = druid
     levels[Faction.hunter] = hunter
     levels[Faction.mage] = mage
@@ -68,9 +60,7 @@ def load_user_info(id: int) -> UserData:
     levels[Faction.warrior] = warrior
     builder.set_levels(levels)
     
-    query = "SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM WINS WHERE id = %s"
-    cursor.execute(query, (id,))
-    
+    execute_query("SELECT druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior FROM WINS")    
     result = cursor.fetchone()
     druid, hunter, mage, paladin, priest, rogue, shaman, warlock, warrior = result
     wins : dict[Faction, int] = {}
@@ -84,3 +74,38 @@ def load_user_info(id: int) -> UserData:
     wins[Faction.warlock] = warlock
     wins[Faction.warrior] = warrior
     builder.set_wins(wins)
+    
+    return builder.build()
+
+def commit_user_data(id: int, user_data: UserData):
+    
+    def execute_query(query: str):
+        try:
+            cursor.execute(query + " WHERE id = %s", (id,))
+        except:
+            print(f"Invalid syntax: {query}")
+        
+    execute_query(f"UPDATE RESOURCES
+                    SET gold = {user_data.gold}, dust = {user_data.dust}")
+    
+    execute_query(f"UPDATE CARDPACKS
+                    SET original = {user_data.packs[CardPack.original]},
+                        naxxramas = {user_data.packs[CardPack.naxxramas]},
+                        gobvsgno = {user_data.packs[CardPack.gobvsgno]},
+                        blackrock = {user_data.packs[CardPack.blackrock]}")
+    
+    execute_query("DELETE FROM COLLECTIONS")
+    for card_id, qty in user_data.cards.items():
+        query = "INSERT INTO COLLECITONS VALUES %s, %s, %s"
+        cursor.execute(query, (id, card_id, qty,))
+    
+    execute_query("DELETE FROM COLLECTIONS")
+    for deckname, deckcode in user_data.decks:
+        query = "INSERT INTO DECKS VALUES %s, %s, %s"
+        cursor.execute(query, (id, deckname, deckcode,))
+    
+    # TODO
+    # LEVELS
+    
+    # TODO
+    # WINS
